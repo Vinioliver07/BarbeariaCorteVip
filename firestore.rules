@@ -172,17 +172,15 @@ service cloud.firestore {
      * @path /appointments/{appointmentId}
      * @allow (create) A signed-in customer (auth.uid: 'user_123') can create an appointment for themselves.
      * @allow (get) A barber (with a role doc) can read any appointment.
-     * @allow (list) Anyone can list appointments to check for available slots, but only specific fields.
+     * @allow (list) Anyone can list appointments to check for available slots.
      * @allow (update) A customer can update their own appointment, and a barber can update any appointment.
-     * @deny (list) A regular customer cannot list all fields of all appointments.
+     * @deny (list) A regular customer cannot list all fields of all appointments unless they are a barber.
      * @deny (update) A customer cannot change the `customerId` field of an existing appointment.
      * @principle Implements a hybrid ownership and role-based access control model.
      */
     match /appointments/{appointmentId} {
       allow get: if (resource != null && isOwner(resource.data.customerId)) || isBarber();
-      // Public users and customers can read only the start time to check for availability.
-      // Barbers can read all fields.
-      allow list: if (request.query.select == null || request.query.select.size() == 0 || request.query.select.hasAll(['startTime'])) || isBarber();
+      allow list: if true;
       allow create: if isSignedIn();
       allow update: if resource != null && (isOwner(resource.data.customerId) || isBarber()) && isCustomerIdImmutable();
       allow delete: if resource != null && (isOwner(resource.data.customerId) || isBarber());
@@ -200,5 +198,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

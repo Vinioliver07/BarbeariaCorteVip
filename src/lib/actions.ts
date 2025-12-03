@@ -2,8 +2,7 @@
 
 import { z } from "zod";
 import { services } from "./data";
-import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { collection, getFirestore } from "firebase/firestore";
+import { collection, getFirestore, addDoc } from "firebase/firestore";
 import { initializeFirebase } from "@/firebase";
 
 const bookingSchema = z.object({
@@ -46,7 +45,7 @@ export async function bookAppointment(values: z.infer<typeof bookingSchema>) {
   };
   
   try {
-    // This function is non-blocking, but we can await it on the server
+    // This function can be awaited on the server
     await addDoc(appointmentsCollection, newAppointment);
     
     console.log("--- Novo Agendamento Salvo no Firestore ---");
@@ -62,7 +61,3 @@ export async function bookAppointment(values: z.infer<typeof bookingSchema>) {
     return { success: false, error: "Não foi possível salvar o agendamento no banco de dados." };
   }
 }
-
-// Re-exporting addDoc from firebase/firestore to use it here.
-// In a real app, you might have a central place for db functions.
-import { addDoc } from 'firebase/firestore';

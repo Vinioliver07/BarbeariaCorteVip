@@ -45,7 +45,10 @@ export function Booking() {
     // Query for appointments happening today or in the future
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return query(collection(firestore, 'appointments'), where('startTime', '>=', today.toISOString()));
+    return query(
+        collection(firestore, 'appointments'), 
+        where('startTime', '>=', today.toISOString())
+    );
   }, [firestore]);
   
   const { data: appointments, isLoading: isLoadingAppointments } = useCollection<{ startTime: string }>(appointmentsQuery);
