@@ -104,7 +104,7 @@ export function Booking() {
       setAvailableTimes(slots);
       form.resetField('time');
     }
-  }, [selectedDate, selectedServiceId, bookedSlots]);
+  }, [selectedDate, selectedServiceId, bookedSlots, form]);
 
 
   async function onSubmit(values: BookingFormValues) {
@@ -125,9 +125,10 @@ export function Booking() {
         
         window.open(whatsappUrl, '_blank');
         
-        setBookingSuccess(true); // Mark as success to allow re-booking
+        setBookingSuccess(true);
         form.reset();
         setAvailableTimes([]);
+
       } else {
         toast({
           variant: "destructive",
@@ -146,7 +147,6 @@ export function Booking() {
     }
   }
   
-  // This state is now just to allow the user to book again
   if (bookingSuccess) {
     return (
       <section id="booking" className="py-20 bg-background">
