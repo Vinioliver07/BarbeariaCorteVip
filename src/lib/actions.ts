@@ -8,16 +8,23 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { firebaseConfig } from "@/firebase/config";
 
 // Initialize Firebase Admin SDK
+// This ensures that initialization only happens once.
 if (!getApps().length) {
-  if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-    initializeApp({
-      credential: cert(serviceAccount),
-    });
-  } else {
-    // This is for local development without the service account key in env.
-    // It uses the client-side config, which works for emulators or if ADC are set up.
-    initializeApp({ projectId: firebaseConfig.projectId });
+  try {
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+      // Production: Use the service account key from environment variables
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+      initializeApp({
+        credential: cert(serviceAccount),
+      });
+    } else {
+      // Development: Fallback to client-side config for emulators or ADC
+      // This is less secure for production but useful for local dev.
+      console.warn("Initializing Firebase Admin with client-side config. This is intended for local development only.");
+      initializeApp({ projectId: firebaseConfig.projectId });
+    }
+  } catch (error) {
+    console.error("Firebase Admin SDK initialization error:", error);
   }
 }
 
@@ -49,7 +56,7 @@ export async function bookAppointment(values: z.infer<typeof bookingSchema>) {
   const bookingDateTime = new Date(parsed.data.date);
   const [hours, minutes] = parsed.data.time.split(':').map(Number);
   bookingDateTime.setHours(hours, minutes, 0, 0);
-
+  
   const newAppointment = {
     customerName: parsed.data.name,
     customerPhone: parsed.data.phone,
@@ -59,18 +66,19 @@ export async function bookAppointment(values: z.infer<typeof bookingSchema>) {
   };
   
   try {
-    await appointmentsCollection.add(newAppointment);
+    const docRef = await appointmentsCollection.add(newAppointment);
     
-    console.log("--- Novo Agendamento Salvo no Firestore ---");
-    console.log("Cliente:", parsed.data.name);
-    console.log("Serviço:", service?.name);
-    console.log("Data e Hora:", bookingDateTime.toLocaleString('pt-BR'));
+    console.log(`--- New Appointment Saved (ID: ${docRef.id}) ---`);
+    console.log("Client:", parsed.data.name);
+    console.log("Service:", service?.name);
+    console.log("DateTime:", bookingDateTime.toISOString());
     console.log("---------------------------------------");
 
     return { success: true, appointment: newAppointment };
 
   } catch (error) {
     console.error("Error saving appointment to Firestore:", error);
+    // Provide a more generic error to the client for security.
     return { success: false, error: "Não foi possível salvar o agendamento no banco de dados." };
   }
 }
