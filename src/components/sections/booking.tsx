@@ -112,6 +112,7 @@ export function Booking() {
 
     try {
       const result = await bookAppointment(values);
+      
       if (result.success) {
         toast({
           title: "Agendamento Realizado!",
@@ -125,9 +126,11 @@ export function Booking() {
         
         window.open(whatsappUrl, '_blank');
         
-        setBookingSuccess(true);
+        // Reset form for a new appointment
         form.reset();
         setAvailableTimes([]);
+        setBookingSuccess(true); // Show success message temporarily
+        setTimeout(() => setBookingSuccess(false), 5000); // Hide success message after 5 seconds
 
       } else {
         toast({

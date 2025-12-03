@@ -3,8 +3,25 @@
 
 import { z } from "zod";
 import { services } from "./data";
-import { collection, getFirestore, addDoc } from "firebase/firestore";
-import { initializeFirebase } from "@/firebase";
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+import { firebaseConfig } from "@/firebase/config";
+
+// Initialize Firebase Admin SDK
+if (!getApps().length) {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+    initializeApp({
+      credential: cert(serviceAccount),
+    });
+  } else {
+    // This is for local development without the service account key in env.
+    // It uses the client-side config, which works for emulators or if ADC are set up.
+    initializeApp({ projectId: firebaseConfig.projectId });
+  }
+}
+
+const db = getFirestore();
 
 const bookingSchema = z.object({
   serviceId: z.string(),
@@ -12,7 +29,6 @@ const bookingSchema = z.object({
   time: z.string(),
   name: z.string(),
   phone: z.string(),
-  // Add a customerId for linking to a user account if needed in the future
   customerId: z.string().optional(), 
 });
 
@@ -23,8 +39,7 @@ export async function bookAppointment(values: z.infer<typeof bookingSchema>) {
     return { success: false, error: "Dados inválidos." };
   }
 
-  const { firestore } = initializeFirebase();
-  const appointmentsCollection = collection(firestore, 'appointments');
+  const appointmentsCollection = db.collection('appointments');
 
   const service = services.find(s => s.id === parsed.data.serviceId);
   if (!service) {
@@ -39,15 +54,12 @@ export async function bookAppointment(values: z.infer<typeof bookingSchema>) {
     customerName: parsed.data.name,
     customerPhone: parsed.data.phone,
     serviceId: parsed.data.serviceId,
-    serviceName: service.name, // Garante que o nome do serviço é salvo
+    serviceName: service.name,
     startTime: bookingDateTime.toISOString(),
-    // customerId will be useful when users can create accounts
-    // customerId: parsed.data.customerId || null, 
   };
   
   try {
-    // This function can be awaited on the server
-    await addDoc(appointmentsCollection, newAppointment);
+    await appointmentsCollection.add(newAppointment);
     
     console.log("--- Novo Agendamento Salvo no Firestore ---");
     console.log("Cliente:", parsed.data.name);
