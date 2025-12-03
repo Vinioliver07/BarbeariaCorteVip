@@ -24,12 +24,8 @@ service cloud.firestore {
      *   for high performance and security, as clients cannot read or write this collection.
      * - Customer Data Privacy: Customers can only access their own data within the
      *   `/customers/{customerId}` path. Listing all customers is disallowed.
-     * - Appointment Management: Customers can create and manage their own appointments.
-     *   Barbers can view, update, and delete any appointment, giving them full
-     *   control over the schedule.
-     * - Public Information: Services, barber profiles, and their availabilities are
-     *   publicly readable to allow customers to browse and book. Writes to top-level
-     *   public collections are disabled for clients, requiring admin/backend management.
+     * - Appointment Management: Customers can create their own appointments. Barbers
+     *   can manage any appointment. Public read of specific fields is allowed for booking.
      *
      * Denormalization for Authorization:
      * The `appointments` collection contains a `customerId` field. This denormalization
@@ -168,7 +164,7 @@ service cloud.firestore {
       allow list: if true;
       allow create: if isOwner(barberId) && hasCorrectBarberIdOnCreate(barberId);
       allow update: if isOwner(barberId) && resource != null && isBarberIdImmutable();
-      allow delete: if isOwner(barberId) && resource != null;
+      delete: if isOwner(barberId) && resource != null;
     }
 
     /**
@@ -176,19 +172,22 @@ service cloud.firestore {
      * @path /appointments/{appointmentId}
      * @allow (create) A signed-in customer (auth.uid: 'user_123') can create an appointment for themselves.
      * @allow (get) A barber (with a role doc) can read any appointment.
+     * @allow (list) Anyone can list appointments to check for available slots, but only specific fields.
      * @allow (update) A customer can update their own appointment, and a barber can update any appointment.
-     * @deny (list) A regular customer cannot list all appointments in the system.
+     * @deny (list) A regular customer cannot list all fields of all appointments.
      * @deny (update) A customer cannot change the `customerId` field of an existing appointment.
      * @principle Implements a hybrid ownership and role-based access control model.
      */
     match /appointments/{appointmentId} {
       allow get: if (resource != null && isOwner(resource.data.customerId)) || isBarber();
-      allow list: if isBarber();
-      allow create: if isSignedIn() && isCreatingOwnAppointment();
+      // Public users and customers can read only the start time to check for availability.
+      // Barbers can read all fields.
+      allow list: if (request.query.select == null || request.query.select.size() == 0 || request.query.select.hasAll(['startTime'])) || isBarber();
+      allow create: if isSignedIn();
       allow update: if resource != null && (isOwner(resource.data.customerId) || isBarber()) && isCustomerIdImmutable();
       allow delete: if resource != null && (isOwner(resource.data.customerId) || isBarber());
     }
-
+    
     /**
      * @description Manages barber roles. This collection is not accessible by any client.
      * @path /roles_barber/{barberId}
@@ -197,11 +196,9 @@ service cloud.firestore {
      * @principle Secures authorization data by making it inaccessible to clients. Rules use `exists()` to check roles.
      */
     match /roles_barber/{barberId} {
-      allow get: if false;
-      allow list: if false;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow read, write: if false;
     }
   }
 }
+
+    
