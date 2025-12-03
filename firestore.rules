@@ -180,7 +180,7 @@ service cloud.firestore {
      */
     match /appointments/{appointmentId} {
       allow get: if true;
-      allow list: if isBarber();
+      allow list: if true;
       allow create: if isSignedIn();
       allow update: if resource != null && (isOwner(resource.data.customerId) || isBarber()) && isCustomerIdImmutable();
       allow delete: if resource != null && (isOwner(resource.data.customerId) || isBarber());
