@@ -1,3 +1,4 @@
+
 "use server";
 
 import { z } from "zod";
@@ -38,7 +39,7 @@ export async function bookAppointment(values: z.infer<typeof bookingSchema>) {
     customerName: parsed.data.name,
     customerPhone: parsed.data.phone,
     serviceId: parsed.data.serviceId,
-    serviceName: service.name,
+    serviceName: service.name, // Garante que o nome do serviço é salvo
     startTime: bookingDateTime.toISOString(),
     // customerId will be useful when users can create accounts
     // customerId: parsed.data.customerId || null, 

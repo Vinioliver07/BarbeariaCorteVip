@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect } from 'react';
@@ -100,7 +101,7 @@ function AdminDashboard() {
                     <Card key={app.id} className="bg-card shadow-md">
                         <CardHeader>
                         <CardTitle className="flex justify-between items-center">
-                            <span className="text-primary">{app.customerName}</span>
+                            <span className="text-primary">{app.customerName || 'Cliente não informado'}</span>
                             <span className="text-sm font-medium text-muted-foreground">{format(startTime, "dd/MM/yy")}</span>
                         </CardTitle>
                         </CardHeader>
@@ -111,11 +112,11 @@ function AdminDashboard() {
                             </div>
                             <div className="flex items-center gap-3">
                                 <Scissors className="w-5 h-5 text-primary"/>
-                                <span>{app.serviceName}</span>
+                                <span>{app.serviceName || 'Serviço não informado'}</span>
                             </div>
                             <div className="flex items-center gap-3">
                                 <Phone className="w-5 h-5 text-primary"/>
-                                <span>{app.customerPhone}</span>
+                                <span>{app.customerPhone || 'Telefone não informado'}</span>
                             </div>
                         </CardContent>
                     </Card>
