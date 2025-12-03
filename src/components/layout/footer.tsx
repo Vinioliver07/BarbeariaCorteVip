@@ -1,10 +1,11 @@
-import { Phone, Mail, MapPin } from 'lucide-react';
+import { Phone, Mail, MapPin, LogIn } from 'lucide-react';
 import { Logo } from '@/components/logo';
+import Link from 'next/link';
 
 export function Footer() {
   return (
     <footer className="bg-secondary/20 py-12">
-      <div className="container mx-auto px-4 md:px-6 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+      <div className="container mx-auto px-4 md:px-6 grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
         <div className="flex flex-col items-center md:items-start gap-4">
           <Logo />
           <p className="text-muted-foreground max-w-xs">Onde o estilo encontra a precisão. Agende seu horário e sinta a diferença.</p>
@@ -30,6 +31,13 @@ export function Footer() {
           <h3 className="font-headline text-xl font-semibold mb-4 text-primary">Horário de Funcionamento</h3>
           <p className="text-muted-foreground">Segunda a Sábado</p>
           <p className="text-muted-foreground">08:00 - 20:00</p>
+        </div>
+        <div>
+          <h3 className="font-headline text-xl font-semibold mb-4 text-primary">Acesso Restrito</h3>
+          <Link href="/admin" className="flex items-center justify-center md:justify-start gap-2 hover:text-primary transition-colors">
+            <LogIn size={16} />
+            <span>Painel do Barbeiro</span>
+          </Link>
         </div>
       </div>
       <div className="container mx-auto mt-8 pt-8 border-t border-border text-center text-sm text-muted-foreground">

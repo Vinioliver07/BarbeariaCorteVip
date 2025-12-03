@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo }from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -19,6 +19,8 @@ import { bookAppointment } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from '../ui/card';
 import { Input } from '../ui/input';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
 
 const bookingSchema = z.object({
   name: z.string().min(2, { message: "O nome deve ter pelo menos 2 caracteres." }),
@@ -31,27 +33,27 @@ const bookingSchema = z.object({
 type BookingFormValues = z.infer<typeof bookingSchema>;
 
 export function Booking() {
-  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [lastBooking, setLastBooking] = useState<BookingFormValues | null>(null);
   const { toast } = useToast();
-  const [bookedSlots, setBookedSlots] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
+  
+  // Firestore data
+  const firestore = useFirestore();
+  const appointmentsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    // Query for appointments happening today or in the future
     const today = new Date();
-    const nextDay = new Date(today);
-    nextDay.setDate(today.getDate() + 1);
+    today.setHours(0, 0, 0, 0);
+    return query(collection(firestore, 'appointments'), where('startTime', '>=', today.toISOString()));
+  }, [firestore]);
+  
+  const { data: appointments, isLoading: isLoadingAppointments } = useCollection<{ startTime: string }>(appointmentsQuery);
 
-    const todayISO = today.toISOString().split('T')[0];
-    const nextDayISO = nextDay.toISOString().split('T')[0];
-
-    setBookedSlots(new Set([
-      `${todayISO}T14:00:00`,
-      `${todayISO}T16:30:00`,
-      `${nextDayISO}T10:00:00`,
-    ]));
-  }, []);
+  const bookedSlots = useMemo(() => {
+    if (!appointments) return new Set();
+    return new Set(appointments.map(app => app.startTime.slice(0, 19) + 'Z'));
+  }, [appointments]);
   
   useEffect(() => {
     if (bookingSuccess && lastBooking) {
@@ -72,9 +74,10 @@ export function Booking() {
       phone: ""
     }
   });
-
+  
   const selectedServiceId = form.watch('serviceId');
   const selectedDate = form.watch('date');
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
 
   const generateTimeSlots = (date: Date, service: Service | undefined) => {
     if (!date || !service) return [];
@@ -96,7 +99,7 @@ export function Booking() {
 
         if (slotEndTime > closingTime) continue;
 
-        const isoString = potentialTime.toISOString().slice(0, 19);
+        const isoString = potentialTime.toISOString().slice(0, 19) + 'Z';
         
         if (!bookedSlots.has(isoString) && potentialTime > new Date()) {
           slots.push(potentialTime.toTimeString().slice(0, 5));
@@ -125,12 +128,6 @@ export function Booking() {
       if (result.success) {
         setLastBooking(values);
         setBookingSuccess(true);
-        const bookingDateTime = new Date(values.date);
-        const [hours, minutes] = values.time.split(':').map(Number);
-        bookingDateTime.setHours(hours, minutes, 0, 0);
-        const newSlot = bookingDateTime.toISOString().slice(0, 19);
-
-        setBookedSlots(prev => new Set(prev).add(newSlot));
         form.reset();
         setAvailableTimes([]);
       } else {
@@ -245,7 +242,8 @@ export function Booking() {
                       <FormLabel className="text-primary">Horário Disponível</FormLabel>
                       <FormControl>
                         <div className='min-h-[96px]'>
-                          {selectedDate && selectedServiceId ? (
+                          {isLoadingAppointments && <Loader2 className="mt-2 h-6 w-6 animate-spin" />}
+                          {!isLoadingAppointments && selectedDate && selectedServiceId ? (
                             availableTimes.length > 0 ? (
                               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                                 {availableTimes.map(time => (
@@ -256,7 +254,7 @@ export function Booking() {
                                 ))}
                               </div>
                             ) : (<p className="text-sm text-muted-foreground pt-2">Não há horários disponíveis para esta data. Por favor, selecione outro dia.</p>)
-                          ) : (<p className="text-sm text-muted-foreground pt-2">Selecione um serviço e uma data para ver os horários.</p>)}
+                          ) : !isLoadingAppointments && (<p className="text-sm text-muted-foreground pt-2">Selecione um serviço e uma data para ver os horários.</p>)}
                         </div>
                       </FormControl>
                       <FormMessage />
@@ -264,8 +262,8 @@ export function Booking() {
                   )}
                 />
 
-                <Button type="submit" disabled={isSubmitting || !form.formState.isValid} className="w-full bg-primary hover:bg-accent text-primary-foreground font-bold" size="lg">
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Button type="submit" disabled={isSubmitting || !form.formState.isValid || isLoadingAppointments} className="w-full bg-primary hover:bg-accent text-primary-foreground font-bold" size="lg">
+                  {(isSubmitting || isLoadingAppointments) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Confirmar Agendamento
                 </Button>
               </form>
