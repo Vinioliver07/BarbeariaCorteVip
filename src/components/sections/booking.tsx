@@ -28,10 +28,13 @@ const bookingSchema = z.object({
   time: z.string({ required_error: "Por favor, selecione um horário." }),
 });
 
+type BookingFormValues = z.infer<typeof bookingSchema>;
+
 export function Booking() {
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [lastBooking, setLastBooking] = useState<BookingFormValues | null>(null);
   const { toast } = useToast();
   const [bookedSlots, setBookedSlots] = useState<Set<string>>(new Set());
 
@@ -49,8 +52,20 @@ export function Booking() {
       `${nextDayISO}T10:00:00`,
     ]));
   }, []);
+  
+  useEffect(() => {
+    if (bookingSuccess && lastBooking) {
+      const barberPhone = '5511999998888'; // Número do WhatsApp do barbeiro
+      const clientName = lastBooking.name;
+      const message = `Olá, eu sou ${clientName}, agendei meu horário e estou confirmando que irei.`;
+      const whatsappUrl = `https://wa.me/${barberPhone}?text=${encodeURIComponent(message)}`;
+      
+      window.open(whatsappUrl, '_blank');
+    }
+  }, [bookingSuccess, lastBooking]);
 
-  const form = useForm<z.infer<typeof bookingSchema>>({
+
+  const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
       name: "",
@@ -101,13 +116,14 @@ export function Booking() {
   }, [selectedDate, selectedServiceId, bookedSlots]);
 
 
-  async function onSubmit(values: z.infer<typeof bookingSchema>) {
+  async function onSubmit(values: BookingFormValues) {
     setIsSubmitting(true);
     setBookingSuccess(false);
 
     try {
       const result = await bookAppointment(values);
       if (result.success) {
+        setLastBooking(values);
         setBookingSuccess(true);
         const bookingDateTime = new Date(values.date);
         const [hours, minutes] = values.time.split(':').map(Number);
@@ -141,8 +157,8 @@ export function Booking() {
         <div className="container mx-auto px-4 md:px-6 text-center flex flex-col items-center justify-center min-h-[500px]">
            <CheckCircle className="w-24 h-24 text-green-500 mb-6" />
            <h2 className="font-headline text-4xl text-primary mb-4">Agendamento Confirmado!</h2>
-           <p className="text-lg text-muted-foreground mb-8 max-w-md">Seu horário foi reservado com sucesso. Uma confirmação foi enviada para o seu telefone. Nos vemos em breve!</p>
-           <Button onClick={() => setBookingSuccess(false)}>Agendar outro horário</Button>
+           <p className="text-lg text-muted-foreground mb-8 max-w-md">Você será redirecionado para o WhatsApp para confirmar sua presença. Caso não aconteça, <a href={`https://wa.me/5511999998888?text=${encodeURIComponent(`Olá, eu sou ${lastBooking?.name}, agendei meu horário e estou confirmando que irei.`)}`} target="_blank" rel="noopener noreferrer" className="text-primary underline">clique aqui</a>.</p>
+           <Button onClick={() => { setBookingSuccess(false); setLastBooking(null); }}>Agendar outro horário</Button>
         </div>
       </section>
     );
