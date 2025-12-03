@@ -60,7 +60,7 @@ export function Booking() {
   
   useEffect(() => {
     if (bookingSuccess && lastBooking) {
-      const barberPhone = '5511999998888'; // Número do WhatsApp do barbeiro
+      const barberPhone = '5537991209060'; // Número do WhatsApp do barbeiro
       const clientName = lastBooking.name;
       const message = `Olá, eu sou ${clientName}, agendei meu horário e estou confirmando que irei.`;
       const whatsappUrl = `https://wa.me/${barberPhone}?text=${encodeURIComponent(message)}`;
@@ -157,7 +157,7 @@ export function Booking() {
         <div className="container mx-auto px-4 md:px-6 text-center flex flex-col items-center justify-center min-h-[500px]">
            <CheckCircle className="w-24 h-24 text-green-500 mb-6" />
            <h2 className="font-headline text-4xl text-primary mb-4">Agendamento Confirmado!</h2>
-           <p className="text-lg text-muted-foreground mb-8 max-w-md">Você será redirecionado para o WhatsApp para confirmar sua presença. Caso não aconteça, <a href={`https://wa.me/5511999998888?text=${encodeURIComponent(`Olá, eu sou ${lastBooking?.name}, agendei meu horário e estou confirmando que irei.`)}`} target="_blank" rel="noopener noreferrer" className="text-primary underline">clique aqui</a>.</p>
+           <p className="text-lg text-muted-foreground mb-8 max-w-md">Você será redirecionado para o WhatsApp para confirmar sua presença. Caso não aconteça, <a href={`https://wa.me/5537991209060?text=${encodeURIComponent(`Olá, eu sou ${lastBooking?.name}, agendei meu horário e estou confirmando que irei.`)}`} target="_blank" rel="noopener noreferrer" className="text-primary underline">clique aqui</a>.</p>
            <Button onClick={() => { setBookingSuccess(false); setLastBooking(null); }}>Agendar outro horário</Button>
         </div>
       </section>
@@ -190,7 +190,7 @@ export function Booking() {
                   <FormField control={form.control} name="phone" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-primary">Seu Telefone</FormLabel>
-                        <FormControl><Input type="tel" placeholder="(11) 99999-8888" {...field} /></FormControl>
+                        <FormControl><Input type="tel" placeholder="(37) 99120-9060" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )}

@@ -15,7 +15,7 @@ export function Footer() {
           <ul className="space-y-2">
             <li className="flex items-center justify-center md:justify-start gap-2 hover:text-primary transition-colors">
               <Phone size={16} />
-              <span>(11) 99999-8888</span>
+              <span>(37) 99120-9060</span>
             </li>
             <li className="flex items-center justify-center md:justify-start gap-2 hover:text-primary transition-colors">
               <Mail size={16} />
