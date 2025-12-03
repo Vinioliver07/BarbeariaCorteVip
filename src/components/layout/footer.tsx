@@ -3,6 +3,8 @@ import { Logo } from '@/components/logo';
 import Link from 'next/link';
 
 export function Footer() {
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Rua Oribes Batista Leite, 663 - Bairro Santa Tereza, Divinópolis - MG')}`;
+
   return (
     <footer className="bg-secondary/20 py-12">
       <div className="container mx-auto px-4 md:px-6 grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
@@ -21,9 +23,16 @@ export function Footer() {
               <Mail size={16} />
               <span>contato@cortevip.com</span>
             </li>
-            <li className="flex items-center justify-center md:justify-start gap-2 hover:text-primary transition-colors">
-              <MapPin size={16} />
-              <span>Rua Oribes Batista Leite, 663 - Bairro Santa Tereza, Divinópolis - MG</span>
+            <li>
+              <a 
+                href={googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center md:justify-start gap-2 hover:text-primary transition-colors"
+              >
+                <MapPin size={16} />
+                <span>Rua Oribes Batista Leite, 663 - Bairro Santa Tereza, Divinópolis - MG</span>
+              </a>
             </li>
           </ul>
         </div>
