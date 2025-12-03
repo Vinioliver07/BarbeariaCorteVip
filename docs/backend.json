@@ -1,0 +1,299 @@
+{
+  "entities": {
+    "Appointment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Appointment",
+      "type": "object",
+      "description": "Represents a booking appointment made by a customer.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the appointment."
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference to Customer. (Relationship: Customer 1:N Appointment)"
+        },
+        "serviceId": {
+          "type": "string",
+          "description": "Reference to Service. (Relationship: Service 1:N Appointment)"
+        },
+        "startTime": {
+          "type": "string",
+          "description": "The start time of the appointment.",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "The end time of the appointment.",
+          "format": "date-time"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Any additional notes or requests from the customer."
+        }
+      },
+      "required": [
+        "id",
+        "customerId",
+        "serviceId",
+        "startTime",
+        "endTime"
+      ]
+    },
+    "Customer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Customer",
+      "type": "object",
+      "description": "Represents a customer who can book appointments.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the customer."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the customer."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the customer."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the customer.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "The phone number of the customer."
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "phone"
+      ]
+    },
+    "Service": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Service",
+      "type": "object",
+      "description": "Represents a service offered by the barber (e.g., haircut, beard trim).",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the service."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the service (e.g., Haircut, Beard Trim)."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the service."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the service."
+        },
+        "durationMinutes": {
+          "type": "number",
+          "description": "The duration of the service in minutes."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "price",
+        "durationMinutes"
+      ]
+    },
+    "Availability": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Availability",
+      "type": "object",
+      "description": "Represents the availability slots of the barber.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the availability slot."
+        },
+        "barberId": {
+          "type": "string",
+          "description": "Reference to Barber. (Relationship: Barber 1:N Availability)"
+        },
+        "dayOfWeek": {
+          "type": "string",
+          "description": "The day of the week for the availability (e.g., Monday, Tuesday)."
+        },
+        "startTime": {
+          "type": "string",
+          "description": "The start time of the availability slot.",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "The end time of the availability slot.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "barberId",
+        "dayOfWeek",
+        "startTime",
+        "endTime"
+      ]
+    },
+    "Barber": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Barber",
+      "type": "object",
+      "description": "Represents the barber who provides the services.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the barber."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the barber."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the barber."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the barber.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "The phone number of the barber."
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/customers/{customerId}",
+        "definition": {
+          "entityName": "Customer",
+          "schema": {
+            "$ref": "#/backend/entities/Customer"
+          },
+          "description": "Stores customer profiles.  This collection contains personal information and appointments related to each customer.",
+          "params": [
+            {
+              "name": "customerId",
+              "description": "The unique identifier for the customer."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/services/{serviceId}",
+        "definition": {
+          "entityName": "Service",
+          "schema": {
+            "$ref": "#/backend/entities/Service"
+          },
+          "description": "Stores service details, such as haircuts and beard trims.  This collection defines the available services with their descriptions and prices.",
+          "params": [
+            {
+              "name": "serviceId",
+              "description": "The unique identifier for the service."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/barbers/{barberId}",
+        "definition": {
+          "entityName": "Barber",
+          "schema": {
+            "$ref": "#/backend/entities/Barber"
+          },
+          "description": "Stores barber profiles, including their contact information and other details. This collection holds the information about each barber working at CorteVip.",
+          "params": [
+            {
+              "name": "barberId",
+              "description": "The unique identifier for the barber."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/barbers/{barberId}/availabilities/{availabilityId}",
+        "definition": {
+          "entityName": "Availability",
+          "schema": {
+            "$ref": "#/backend/entities/Availability"
+          },
+          "description": "Stores barber availability slots.  This subcollection under each barber's document specifies the times when they are available for appointments.",
+          "params": [
+            {
+              "name": "barberId",
+              "description": "The unique identifier for the barber."
+            },
+            {
+              "name": "availabilityId",
+              "description": "The unique identifier for the availability slot."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/appointments/{appointmentId}",
+        "definition": {
+          "entityName": "Appointment",
+          "schema": {
+            "$ref": "#/backend/entities/Appointment"
+          },
+          "description": "Stores appointment details, including customer and service references. This collection manages all booked appointments.",
+          "params": [
+            {
+              "name": "appointmentId",
+              "description": "The unique identifier for the appointment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_barber/{barberId}",
+        "definition": {
+          "entityName": "Barber",
+          "schema": {
+            "$ref": "#/backend/entities/Barber"
+          },
+          "description": "Documents for barbers with admin privileges to manage appointments. The existence of the document implies barber role.",
+          "params": [
+            {
+              "name": "barberId",
+              "description": "The unique identifier for the barber."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "This Firestore structure is designed to manage appointments, customer data, service information, barber availability, and barber details while ensuring security, scalability, and debuggability. The structure emphasizes authorization independence, clarity of intent, and avoids reliance on custom claims for authorization.\n\n**Authorization Independence:**\n\n*   Authorization is achieved through path-based ownership and the membership map model. For user-owned data like appointments, the `customerId` field within the appointment document directly associates the appointment with a specific customer document. The barbers access to the schedule will be granted by the role inside `/roles_barber/{barberId}`. This eliminates the need for `get()` calls in security rules to check the parent document's attributes, enabling atomic operations and simplified debugging.\n\n**QAPs (Rules Are Not Filters):**\n\n*   The structure supports secure `list` operations by segregating data based on access needs. Customer-specific data is stored under `/customers/{customerId}`, allowing rules to securely filter appointments. Barber-specific availabilities are stored under `/barbers/{barberId}/availabilities/{availabilityId}`, allowing the barber to securely manage his availability.\n\n**Structure Overview:**\n\n*   `/customers/{customerId}`: Stores customer profiles.\n*   `/services/{serviceId}`: Stores service details.\n*   `/barbers/{barberId}`: Stores barber profiles.\n*   `/barbers/{barberId}/availabilities/{availabilityId}`: Stores barber availability slots.\n*   `/appointments/{appointmentId}`: Stores appointment details, including `customerId` and `serviceId` for easy data retrieval and association.\n*   `/roles_barber/{barberId}`: Documents for barbers with admin privileges to manage appointments. The existence of the document implies barber role.\n\n**Denormalization:**\n\n*   The `Appointment` collection includes `customerId` and `serviceId` referencing `Customer` and `Service` documents, respectively. While this isn't strictly authorization data, it avoids the need to perform a collection group query to retrieve appointments for a given user, improving performance."
+  }
+}

@@ -1,0 +1,207 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * Core Philosophy: This ruleset establishes a dual-access model for a barbershop
+     * application. It distinguishes between regular 'customers' and privileged 'barbers'.
+     * Customers have strict ownership over their personal data and appointments.
+     * Barbers are granted broader read and management permissions over the entire
+     * appointment schedule, reflecting their administrative role.
+     *
+     * Data Structure:
+     * - /customers/{customerId}: Private profiles for each customer.
+     * - /appointments/{appointmentId}: Central collection for all bookings. Each
+     *   appointment is denormalized with a `customerId` for ownership checks.
+     * - /services/{serviceId} & /barbers/{barberId}: Publicly readable information.
+     * - /barbers/{barberId}/availabilities/{availabilityId}: Barber-managed schedules.
+     * - /roles_barber/{barberId}: A locked-down collection used to grant barber
+     *   privileges. The existence of a document here confers the barber role.
+     *
+     * Key Security Decisions:
+     * - Barber Role: A user is considered a 'barber' if a document with their UID
+     *   exists in the `/roles_barber` collection. This is checked using `exists()`
+     *   for high performance and security, as clients cannot read or write this collection.
+     * - Customer Data Privacy: Customers can only access their own data within the
+     *   `/customers/{customerId}` path. Listing all customers is disallowed.
+     * - Appointment Management: Customers can create and manage their own appointments.
+     *   Barbers can view, update, and delete any appointment, giving them full
+     *   control over the schedule.
+     * - Public Information: Services, barber profiles, and their availabilities are
+     *   publicly readable to allow customers to browse and book. Writes to top-level
+     *   public collections are disabled for clients, requiring admin/backend management.
+     *
+     * Denormalization for Authorization:
+     * The `appointments` collection contains a `customerId` field. This denormalization
+     * is critical, as it allows security rules to verify customer ownership directly
+     * from the appointment document without needing costly and slow `get()` calls to
+     * other collections.
+     *
+     * Structural Segregation:
+     * The use of a separate `/roles_barber` collection to manage permissions is a
+     * clear example of segregating authorization data from application data. This
+     * makes the ruleset cleaner and more secure.
+     */
+
+    // --------------------------------------------------------------------------
+    // Helper Functions
+    // --------------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the authenticated user's UID matches the provided userId.
+     * This is the foundation of the user-ownership model.
+     */
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    /**
+     * Checks if a user is a barber by verifying the existence of their
+     * UID in the locked-down /roles_barber collection.
+     */
+    function isBarber() {
+      return exists(/databases/$(database)/documents/roles_barber/$(request.auth.uid));
+    }
+
+    /**
+     * Validates that the incoming document's customerId matches the authenticated user.
+     * Used on create to establish ownership correctly.
+     */
+    function isCreatingOwnAppointment() {
+      return request.resource.data.customerId == request.auth.uid;
+    }
+
+    /**
+     * Ensures the customerId on an appointment cannot be changed after creation.
+     * This prevents users from re-assigning appointments.
+     */
+    function isCustomerIdImmutable() {
+      return request.resource.data.customerId == resource.data.customerId;
+    }
+
+    /**
+     * Ensures that when a barber creates an availability slot, the barberId
+     * in the document data correctly links back to the barber in the path.
+     */
+    function hasCorrectBarberIdOnCreate(barberId) {
+      return request.resource.data.barberId == barberId;
+    }
+
+    /**
+     * Ensures the barberId on an availability slot is immutable on update.
+     */
+    function isBarberIdImmutable() {
+      return request.resource.data.barberId == resource.data.barberId;
+    }
+
+    // --------------------------------------------------------------------------
+    // Collection Rules
+    // --------------------------------------------------------------------------
+
+    /**
+     * @description Customers can create and manage their own user profile.
+     * @path /customers/{customerId}
+     * @allow (create) A new user (auth.uid: 'user_123') can create their own profile at `/customers/user_123`.
+     * @allow (update) An existing user (auth.uid: 'user_123') can update their profile at `/customers/user_123`.
+     * @deny (get) A user (auth.uid: 'user_456') cannot read the profile of another user at `/customers/user_123`.
+     * @deny (list) No user can list all documents in the `/customers` collection.
+     * @principle Restricts access to a user's own data tree (Ownership).
+     */
+    match /customers/{customerId} {
+      allow get: if isOwner(customerId);
+      allow list: if false;
+      allow create: if isOwner(customerId);
+      allow update: if isOwner(customerId) && resource != null;
+      allow delete: if isOwner(customerId) && resource != null;
+    }
+
+    /**
+     * @description Defines the services offered, which are publicly readable by all.
+     * @path /services/{serviceId}
+     * @allow (get) Any user, signed in or not, can read a service document.
+     * @allow (list) Any user, signed in or not, can list all available services.
+     * @deny (create) No client can create a new service. This must be done via the console or a backend function.
+     * @principle Provides public read access while securing write operations for administrative control.
+     */
+    match /services/{serviceId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Defines the barber profiles, which are publicly readable.
+     * @path /barbers/{barberId}
+     * @allow (get) Any user can view a barber's profile.
+     * @allow (list) Any user can list all barbers.
+     * @deny (create) No client can create a new barber profile. This is an administrative action.
+     * @principle Provides public read access while securing write operations for administrative control.
+     */
+    match /barbers/{barberId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description A barber's availability is public to view, but only the barber can manage it.
+     * @path /barbers/{barberId}/availabilities/{availabilityId}
+     * @allow (list) A customer can list the availability slots for a barber at `/barbers/barber_abc/availabilities`.
+     * @allow (create) The barber (auth.uid: 'barber_abc') can create a new slot in their own schedule.
+     * @deny (update) A customer cannot update a barber's availability.
+     * @deny (delete) A different barber (auth.uid: 'barber_xyz') cannot delete another barber's availability.
+     * @principle Enforces document ownership for writes while allowing public reads.
+     */
+    match /barbers/{barberId}/availabilities/{availabilityId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isOwner(barberId) && hasCorrectBarberIdOnCreate(barberId);
+      allow update: if isOwner(barberId) && resource != null && isBarberIdImmutable();
+      allow delete: if isOwner(barberId) && resource != null;
+    }
+
+    /**
+     * @description Manages appointments. Customers control their own, while barbers have full admin access.
+     * @path /appointments/{appointmentId}
+     * @allow (create) A signed-in customer (auth.uid: 'user_123') can create an appointment for themselves.
+     * @allow (get) A barber (with a role doc) can read any appointment.
+     * @allow (update) A customer can update their own appointment, and a barber can update any appointment.
+     * @deny (list) A regular customer cannot list all appointments in the system.
+     * @deny (update) A customer cannot change the `customerId` field of an existing appointment.
+     * @principle Implements a hybrid ownership and role-based access control model.
+     */
+    match /appointments/{appointmentId} {
+      allow get: if (resource != null && isOwner(resource.data.customerId)) || isBarber();
+      allow list: if isBarber();
+      allow create: if isSignedIn() && isCreatingOwnAppointment();
+      allow update: if resource != null && (isOwner(resource.data.customerId) || isBarber()) && isCustomerIdImmutable();
+      allow delete: if resource != null && (isOwner(resource.data.customerId) || isBarber());
+    }
+
+    /**
+     * @description Manages barber roles. This collection is not accessible by any client.
+     * @path /roles_barber/{barberId}
+     * @allow (any) No operation is permitted from the client-side.
+     * @deny (any) All client requests to read or write to this collection are rejected.
+     * @principle Secures authorization data by making it inaccessible to clients. Rules use `exists()` to check roles.
+     */
+    match /roles_barber/{barberId} {
+      allow get: if false;
+      allow list: if false;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}
