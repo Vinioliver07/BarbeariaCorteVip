@@ -179,8 +179,8 @@ service cloud.firestore {
      * @principle Implements a hybrid ownership and role-based access control model.
      */
     match /appointments/{appointmentId} {
-      allow get: if (resource != null && isOwner(resource.data.customerId)) || isBarber();
-      allow list: if true;
+      allow get: if true;
+      allow list: if isBarber();
       allow create: if isSignedIn();
       allow update: if resource != null && (isOwner(resource.data.customerId) || isBarber()) && isCustomerIdImmutable();
       allow delete: if resource != null && (isOwner(resource.data.customerId) || isBarber());
