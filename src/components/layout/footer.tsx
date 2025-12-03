@@ -23,7 +23,7 @@ export function Footer() {
             </li>
             <li className="flex items-center justify-center md:justify-start gap-2 hover:text-primary transition-colors">
               <MapPin size={16} />
-              <span>Rua dos Barbeiros, 123 - São Paulo, SP</span>
+              <span>Rua Oribes Batista Leite, 663 - Bairro Santa Tereza, Divinópolis - MG</span>
             </li>
           </ul>
         </div>
