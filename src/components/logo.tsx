@@ -4,7 +4,7 @@ export function Logo() {
   return (
     <div className="flex items-center gap-2">
       <Image 
-        src="https://placehold.co/40x40/b48940/1a1a1a?text=CV" 
+        src="https://i.imgur.com/SbfKyWD.png" 
         alt="CorteVip Logo" 
         width={40} 
         height={40} 
