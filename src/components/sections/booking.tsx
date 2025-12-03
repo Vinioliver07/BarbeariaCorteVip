@@ -35,14 +35,11 @@ type BookingFormValues = z.infer<typeof bookingSchema>;
 export function Booking() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
-  const [lastBooking, setLastBooking] = useState<BookingFormValues | null>(null);
   const { toast } = useToast();
   
-  // Firestore data
   const firestore = useFirestore();
   const appointmentsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // Query for appointments happening today or in the future
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return query(
@@ -57,18 +54,6 @@ export function Booking() {
     if (!appointments) return new Set();
     return new Set(appointments.map(app => app.startTime.slice(0, 19) + 'Z'));
   }, [appointments]);
-  
-  useEffect(() => {
-    if (bookingSuccess && lastBooking) {
-      const barberPhone = '5537991209060'; // Número do WhatsApp do barbeiro
-      const clientName = lastBooking.name;
-      const message = `Olá, eu sou ${clientName}, agendei meu horário e estou confirmando que irei.`;
-      const whatsappUrl = `https://wa.me/${barberPhone}?text=${encodeURIComponent(message)}`;
-      
-      window.open(whatsappUrl, '_blank');
-    }
-  }, [bookingSuccess, lastBooking]);
-
 
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
@@ -86,10 +71,10 @@ export function Booking() {
     if (!date || !service) return [];
     
     const dayOfWeek = date.getDay();
-    if (dayOfWeek === 0) return []; // Barber doesn't work on Sundays
+    if (dayOfWeek === 0) return [];
 
     const slots: string[] = [];
-    const interval = 30; // Generate slots every 30 minutes
+    const interval = 30;
 
     for (let hour = 8; hour < 20; hour++) {
       for (let minute = 0; minute < 60; minute += interval) {
@@ -124,13 +109,23 @@ export function Booking() {
 
   async function onSubmit(values: BookingFormValues) {
     setIsSubmitting(true);
-    setBookingSuccess(false);
 
     try {
       const result = await bookAppointment(values);
       if (result.success) {
-        setLastBooking(values);
-        setBookingSuccess(true);
+        toast({
+          title: "Agendamento Realizado!",
+          description: "Você será redirecionado para o WhatsApp para confirmar.",
+        });
+
+        const barberPhone = '5537991209060';
+        const clientName = values.name;
+        const message = `Olá, eu sou ${clientName}, agendei meu horário e estou confirmando que irei.`;
+        const whatsappUrl = `https://wa.me/${barberPhone}?text=${encodeURIComponent(message)}`;
+        
+        window.open(whatsappUrl, '_blank');
+        
+        setBookingSuccess(true); // Mark as success to allow re-booking
         form.reset();
         setAvailableTimes([]);
       } else {
@@ -151,14 +146,15 @@ export function Booking() {
     }
   }
   
+  // This state is now just to allow the user to book again
   if (bookingSuccess) {
     return (
       <section id="booking" className="py-20 bg-background">
         <div className="container mx-auto px-4 md:px-6 text-center flex flex-col items-center justify-center min-h-[500px]">
            <CheckCircle className="w-24 h-24 text-green-500 mb-6" />
-           <h2 className="font-headline text-4xl text-primary mb-4">Agendamento Confirmado!</h2>
-           <p className="text-lg text-muted-foreground mb-8 max-w-md">Você será redirecionado para o WhatsApp para confirmar sua presença. Caso não aconteça, <a href={`https://wa.me/5537991209060?text=${encodeURIComponent(`Olá, eu sou ${lastBooking?.name}, agendei meu horário e estou confirmando que irei.`)}`} target="_blank" rel="noopener noreferrer" className="text-primary underline">clique aqui</a>.</p>
-           <Button onClick={() => { setBookingSuccess(false); setLastBooking(null); }}>Agendar outro horário</Button>
+           <h2 className="font-headline text-4xl text-primary mb-4">Agendamento Enviado!</h2>
+           <p className="text-lg text-muted-foreground mb-8 max-w-md">Seu pedido de agendamento foi realizado. Finalize a confirmação no WhatsApp.</p>
+           <Button onClick={() => { setBookingSuccess(false); }}>Agendar outro horário</Button>
         </div>
       </section>
     );
