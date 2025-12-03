@@ -164,7 +164,7 @@ service cloud.firestore {
       allow list: if true;
       allow create: if isOwner(barberId) && hasCorrectBarberIdOnCreate(barberId);
       allow update: if isOwner(barberId) && resource != null && isBarberIdImmutable();
-      delete: if isOwner(barberId) && resource != null;
+      allow delete: if isOwner(barberId) && resource != null;
     }
 
     /**
