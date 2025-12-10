@@ -1,0 +1,28 @@
+{
+  "placeholderImages": [
+    {
+      "id": "hero-barbershop",
+      "description": "A stylish, modern barbershop interior with empty chairs.",
+      "imageUrl": "https://images.unsplash.com/photo-1667539916756-9efa8343624f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxiYXJiZXJzaG9wJTIwaW50ZXJpb3J8ZW58MHx8fHwxNzY0NzY5MzM3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "barbershop interior"
+    },
+    {
+      "id": "service-haircut",
+      "description": "A man getting a stylish haircut.",
+      "imageUrl": "https://images.unsplash.com/photo-1620122830785-a18b43585b44?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bWVucyUyMGhhaXJjdXR8ZW58MHx8fHwxNzY0Nzk0OTg1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "mens haircut"
+    },
+    {
+      "id": "service-beard",
+      "description": "A close-up of a barber trimming a client's beard with precision.",
+      "imageUrl": "https://images.unsplash.com/photo-1654097800183-574ba7368f74?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxiZWFyZCUyMHRyaW18ZW58MHx8fHwxNzY0Nzk0OTg1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "beard trim"
+    },
+    {
+      "id": "service-combo",
+      "description": "A man looking sharp after a haircut and beard trim.",
+      "imageUrl": "https://images.unsplash.com/photo-1590540179916-15643504417f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bWFuJTIwc3R5bGluZ3xlbnwwfHx8fDE3NjQ3OTQ5ODV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man styling"
+    }
+  ]
+}
