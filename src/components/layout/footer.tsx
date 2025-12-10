@@ -51,6 +51,10 @@ export function Footer() {
       </div>
       <div className="container mx-auto mt-8 pt-8 border-t border-border text-center text-sm text-muted-foreground">
         <p>&copy; {new Date().getFullYear()} CorteVip. Todos os direitos reservados.</p>
+        <div className="mt-6 flex flex-col items-center gap-2">
+          <p className="text-xs">Desenvolvido por</p>
+          <img src="https://vproject.vercel.app/logo-full.svg" alt="V Project" height="40" className="h-10" />
+        </div>
       </div>
     </footer>
   );

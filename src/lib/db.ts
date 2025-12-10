@@ -87,3 +87,17 @@ export function addAppointment(appointment: Omit<Appointment, 'id' | 'createdAt'
   writeDb(db);
   return newAppointment;
 }
+
+// Deletar appointment
+export function deleteAppointment(id: string): boolean {
+  const db = readDb();
+  const initialLength = db.appointments.length;
+  db.appointments = db.appointments.filter(apt => apt.id !== id);
+  
+  if (db.appointments.length === initialLength) {
+    return false; // Appointment não encontrado
+  }
+  
+  writeDb(db);
+  return true;
+}

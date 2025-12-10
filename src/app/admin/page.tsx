@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { signOut } from 'next-auth/react';
-import { Loader2, LogOut, Calendar, User, Clock, Scissors, Phone } from 'lucide-react';
+import { Loader2, LogOut, Calendar, User, Clock, Scissors, Phone, Trash2 } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ function AdminDashboard() {
   const { data: session, status } = useSession();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoadingAppointments, setIsLoadingAppointments] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     // If not authenticated, redirect to login
@@ -39,18 +40,49 @@ function AdminDashboard() {
   useEffect(() => {
     // Carregar appointments da API
     if (session) {
-      fetch('/api/appointments')
-        .then(res => res.json())
-        .then(data => {
-          setAppointments(data);
-          setIsLoadingAppointments(false);
-        })
-        .catch(err => {
-          console.error('Erro ao carregar appointments:', err);
-          setIsLoadingAppointments(false);
-        });
+      loadAppointments();
     }
   }, [session]);
+
+  const loadAppointments = () => {
+    fetch('/api/appointments')
+      .then(res => res.json())
+      .then(data => {
+        setAppointments(data);
+        setIsLoadingAppointments(false);
+      })
+      .catch(err => {
+        console.error('Erro ao carregar appointments:', err);
+        setIsLoadingAppointments(false);
+      });
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Tem certeza que deseja cancelar este agendamento?')) {
+      return;
+    }
+
+    setDeletingId(id);
+
+    try {
+      const response = await fetch(`/api/appointments/delete?id=${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao cancelar agendamento');
+      }
+
+      // Recarregar appointments
+      loadAppointments();
+      alert('Agendamento cancelado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao deletar:', error);
+      alert('Erro ao cancelar agendamento. Tente novamente.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const handleLogout = async () => {
     await signOut({ redirect: false });
@@ -120,6 +152,22 @@ function AdminDashboard() {
                             <div className="flex items-center gap-3">
                                 <Phone className="w-5 h-5 text-primary"/>
                                 <span>{app.customerPhone || 'Telefone não informado'}</span>
+                            </div>
+                            <div className="pt-2">
+                                <Button 
+                                    variant="destructive" 
+                                    size="sm" 
+                                    className="w-full"
+                                    onClick={() => handleDelete(app.id)}
+                                    disabled={deletingId === app.id}
+                                >
+                                    {deletingId === app.id ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                    )}
+                                    Cancelar Agendamento
+                                </Button>
                             </div>
                         </CardContent>
                     </Card>

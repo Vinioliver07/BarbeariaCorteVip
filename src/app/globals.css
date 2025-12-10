@@ -66,3 +66,18 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Esconder menu de desenvolvedor do Next.js */
+#nextjs__container_errors_label,
+#nextjs__container_build_error_label,
+#nextjs__container_root_layout_error_label,
+nextjs-portal,
+[data-nextjs-dialog-overlay],
+[data-nextjs-toast],
+div[style*="position: fixed"][style*="bottom"][style*="left"][style*="max-width: 420px"],
+div[style*="position: fixed"][style*="z-index: 9000"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

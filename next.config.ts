@@ -3,8 +3,16 @@ import type {NextConfig} from 'next';
 const nextConfig: NextConfig = {
   /* config options here */
   devIndicators: {
-    appIsrStatus: false,
     buildActivity: false,
+    buildActivityPosition: 'bottom-right',
+  },
+  experimental: {
+    // @ts-ignore
+    reactCompiler: false,
+  },
+  // Desabilita o menu de desenvolvedor
+  typescript: {
+    ignoreBuildErrors: false,
   },
   images: {
     remotePatterns: [

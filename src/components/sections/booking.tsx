@@ -136,7 +136,8 @@ export function Booking() {
         startTime: bookingDateTime.toISOString(),
       };
       
-      console.log("Salvando appointment via API:", appointmentData);
+      console.log("🔵 [FORM] Dados do agendamento preparados:", appointmentData);
+      console.log("🔵 [FORM] Enviando para API /api/appointments/create...");
       
       // Salvar via API local
       const response = await fetch('/api/appointments/create', {
@@ -147,20 +148,25 @@ export function Booking() {
         body: JSON.stringify(appointmentData),
       });
       
+      console.log("🔵 [FORM] Resposta recebida. Status:", response.status);
+      
       if (!response.ok) {
-        throw new Error('Erro ao salvar agendamento');
+        const errorData = await response.json();
+        console.error('❌ [FORM] Erro na resposta da API:', errorData);
+        throw new Error(errorData.error || 'Erro ao salvar agendamento');
       }
       
       const result = await response.json();
+      console.log("✅ [FORM] Resultado da API:", result);
       
-      console.log(`--- Novo Agendamento Salvo (ID: ${result.appointment.id}) ---`);
-      console.log("Cliente:", values.name);
-      console.log("Serviço:", service.name);
-      console.log("Data/Hora:", bookingDateTime.toISOString());
-      console.log("---------------------------------------");
+      console.log(`✅ [FORM] Novo Agendamento Salvo (ID: ${result.appointment.id})`);
+      console.log("✅ [FORM] Cliente:", values.name);
+      console.log("✅ [FORM] Serviço:", service.name);
+      console.log("✅ [FORM] Data/Hora:", bookingDateTime.toISOString());
+      console.log("========================================");
       
       if (result.success) {
-        alert("Agendamento Realizado! Voc\u00ea ser\u00e1 redirecionado para o WhatsApp para confirmar.");
+        alert("Agendamento Realizado! Você será redirecionado para o WhatsApp para confirmar.");
 
         const barberPhone = '5537991209060';
         const clientName = values.name;
@@ -176,14 +182,21 @@ export function Booking() {
         setTimeout(() => setBookingSuccess(false), 5000);
         
         // Recarregar appointments
+        console.log("🔵 [FORM] Recarregando lista de agendamentos...");
         fetch('/api/appointments')
           .then(res => res.json())
-          .then(data => setAppointments(data || []))
-          .catch(console.error);
+          .then(data => {
+            console.log("✅ [FORM] Agendamentos recarregados:", data.length);
+            setAppointments(data || []);
+          })
+          .catch(err => {
+            console.error('❌ [FORM] Erro ao recarregar appointments:', err);
+          });
       }
 
     } catch (error: any) {
-      console.error("Erro ao salvar appointment:", error);
+      console.error("❌ [FORM] Erro ao salvar appointment:", error);
+      console.error("❌ [FORM] Stack:", error.stack);
       
       let errorMessage = "Não foi possível salvar o agendamento. Tente novamente.";
       
