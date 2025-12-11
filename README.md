@@ -48,5 +48,7 @@ Acesse `/admin` para fazer login no painel do barbeiro.
 <div align="center">
   <sub>Desenvolvido por</sub>
   <br>
-  <img src="https://vproject.vercel.app/logo-full.svg" width="180">
+  <a href="https://vproject-sable.vercel.app/" target="_blank">
+    <img src="https://vproject-sable.vercel.app/logo-full.svg" width="180" alt="V Project">
+  </a>
 </div>

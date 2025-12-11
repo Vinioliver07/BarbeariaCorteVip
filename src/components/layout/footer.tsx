@@ -1,6 +1,7 @@
 import { Phone, Mail, MapPin, LogIn } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export function Footer() {
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Rua Oribes Batista Leite, 663 - Bairro Santa Tereza, Divinópolis - MG')}`;
@@ -53,7 +54,15 @@ export function Footer() {
         <p>&copy; {new Date().getFullYear()} CorteVip. Todos os direitos reservados.</p>
         <div className="mt-6 flex flex-col items-center gap-2">
           <p className="text-xs">Desenvolvido por</p>
-          <img src="https://vproject.vercel.app/logo-full.svg" alt="V Project" height="40" className="h-10" />
+          <a href="https://vproject-sable.vercel.app/" target="_blank" rel="noopener noreferrer">
+            <Image 
+              src="https://vproject-sable.vercel.app/logo-full.svg" 
+              alt="V Project" 
+              width={180} 
+              height={40}
+              className="h-10 w-auto hover:opacity-80 transition-opacity"
+            />
+          </a>
         </div>
       </div>
     </footer>

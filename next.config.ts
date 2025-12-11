@@ -39,6 +39,12 @@ const nextConfig: NextConfig = {
         hostname: 'i.imgur.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'vproject-sable.vercel.app',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
